@@ -42,14 +42,15 @@ def watch_live_posts(evaluate, notify):
         try:
             client.connect(f'wss://{config.IB_DOMAIN_NAME}/', headers={'Cookie': get_auth_cookie()})
             client.emit('room', 'globalmanage-recent-hashed')
+            notify(f'Connected', f'Watching live posts')
+            client.wait()  # blocks the thread until something happens
         except Exception as e:
             logging.error(f'Exception in live posts watcher: {e}')
 
             notify(f'Lost live posts connection', f'Retrying in {config.LIVE_POSTS_RETRY_TIMEOUT} seconds')
             time.sleep(config.LIVE_POSTS_RETRY_TIMEOUT)  # waits for a bit, maybe will fix itself
 
-        notify(f'Connected', f'Watching live posts')
-        client.wait()  # blocks the thread until something happens
+
 
 
 def watch_reports(notify):
