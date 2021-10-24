@@ -14,7 +14,7 @@ USE_TERMUX_API: bool = False
 FETCH_REPORTS_INTERVAL: int = 60 * 2  # interval between reports fetch (in seconds)
 
 """Live posts watcher related"""
-LIVE_POSTS_RETRY_TIMEOUT: int = 25  # interval between live posts socket reconnection (in seconds)
+LIVE_POSTS_RECONNECT_DELAY: int = 25  # delay between live posts socket reconnection (in seconds)
 
 """Live posts evaluator related"""
 BLACKLIST: tuple = (  # each entry must be a regex

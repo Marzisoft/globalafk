@@ -15,47 +15,50 @@ class Watcher(ABC, Thread):
     def __init__(self):
         Thread.__init__(self)
         self.daemon = True
-        self.kill = Event()
+        self._stp = Event()  # ._stop is reserved
 
-    def kill(self):
+    def stop(self):
         logging.debug(f'Killing thread, goodbye')
-        self.kill.set()
+        self._stp.set()
 
 
 class LivePostsWatcher(Watcher):
     def __init__(self, session, notify, evaluate):
         super().__init__()
-        self.session = session
-        self.evaluate = evaluate
-        self.notify = notify
 
-        io = socketio.Client(reconnection=False)  # cannot use class variable to make the annotation
+        client = socketio.Client(  # cannot use class variable to make the annotations
+            http_session=session,
+            reconnection_delay=config.LIVE_POSTS_RECONNECTION_DELAY,
+            reconnection_delay_max=config.LIVE_POSTS_RECONNECTION_DELAY
+        )
 
-        @io.on('newPost')
+        @client.event
+        def connect():
+            logging.debug(f'Live posts client connected')
+            client.emit('room', 'globalmanage-recent-hashed')
+            notify(f'Connected', f'Watching live posts')
+
+        @client.event
+        def disconnect():
+            logging.error(f'Live posts client disconnected')
+            notify(f'Lost live posts connection', f'Retrying in {config.LIVE_POSTS_RECONNECTION_DELAY} seconds')
+
+        @client.on('newPost')
         def on_new_post(post):  # specifies new post handler
             urls, entries = evaluate(post["nomarkup"])
             if urls or entries:
                 notify(f'Alert! {get_path(post)}', '\n'.join(urls) + '\n'.join(entries))
 
-        self.io = io
-
+        self.client = client
         self.start()
 
     def run(self):
-        while True:  # main loop, do while bootleg
-            try:
-                self.io.connect(f'wss://{config.DOMAIN_NAME}/', headers={'Cookie': self.session.auth_cookie()})
-                self.io.emit('room', 'globalmanage-recent-hashed')
-                self.notify(f'Connected', f'Watching live posts')
+        self.client.connect(f'wss://{config.DOMAIN_NAME}/')
+        self.client.wait()  # blocks the thread until something happens
 
-                self.io.wait()  # blocks the thread until something happens
-            except Exception as e:
-                logging.error(f'Exception occurred {e} while watching live')
-                self.notify(f'Lost live posts connection', f'Retrying in {config.LIVE_POSTS_RETRY_TIMEOUT} seconds')
-
-            if self.kill.wait(config.LIVE_POSTS_RETRY_TIMEOUT):
-                logging.info("Exiting live posts watcher")
-                break
+        if self._stp.wait():
+            logging.info("Exiting live posts watcher")
+            self.client.disconnect()
 
 
 class ReportsWatcher(Watcher):
@@ -71,7 +74,6 @@ class ReportsWatcher(Watcher):
     def fetch_reports(self):
         reply = self.session.get(
             url=f'https://{config.DOMAIN_NAME}/globalmanage/reports.json')
-        reply.raise_for_status()
         reports = reply.json()["reports"]
         return reports, len(reports)
 
@@ -83,12 +85,11 @@ class ReportsWatcher(Watcher):
                     self.notify(f'New reports!',
                                 "\n".join([f'{get_path(p)}  {[r["reason"] for r in p["globalreports"]]}' for p in
                                            reported_posts]))
-
                 self.known_reports = num_reported_posts
             except RequestException as e:
                 logging.error(f'Exception {e} occurred while fetching reports')
                 self.notify(f'Error while fetching reports', f'Trying to reconnect')
 
-            if self.kill.wait(config.FETCH_REPORTS_INTERVAL):
+            if self._stp.wait(config.FETCH_REPORTS_INTERVAL):
                 logging.info("Exiting reports watcher")
                 break
