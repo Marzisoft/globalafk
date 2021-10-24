@@ -6,22 +6,31 @@ from urlextract import URLExtract
 from config import config
 
 
+def _format_match(match):
+    s, e, m = match.start(0), match.end(0), match.string
+    r = m[s - config.TRIGGER_OFFSET or 0:e if e + config.TRIGGER_OFFSET > len(m) else e + config.TRIGGER_OFFSET]
+    return r[:s] + config.TRIGGER_WRAPPER + r[s:e] + config.TRIGGER_WRAPPER + r[e:]
+
+
 class Evaluator:
     def __init__(self):
-        self.blacklist_re = re.compile('|'.join(config.BLACKLIST), re.IGNORECASE)
-        self.url_blacklist_re = re.compile(f'(?!{"|".join(config.URL_WHITELIST)})', re.IGNORECASE)
 
-        logging.debug(f'Compiled, url blacklist regex: {self.url_blacklist_re}\n blacklist regex: {self.blacklist_re}')
+        if config.TRIGGER_ON_BLACKLISTED:
+            self.blacklist_re = re.compile('|'.join(config.BLACKLIST), re.IGNORECASE)
+            logging.debug(f'Compiled blacklist: {self.blacklist_re}')
 
-        self.__extractor = URLExtract(extract_localhost=False)
+        if config.TRIGGER_ON_NON_WHITELISTED_URLS:
+            self.url_blacklist_re = re.compile(f'(?!{"|".join(config.URL_WHITELIST)})', re.IGNORECASE)
+            self._url_extractor = URLExtract(extract_localhost=False)
+            logging.debug(f'Compiled url blacklist:{self.url_blacklist_re}')
 
     def evaluate(self, text):
-        if not text:
-            return [], []
+        trigger_urls = [
+            *filter(self.url_blacklist_re.match, self._url_extractor.find_urls(text, only_unique=True))
+        ] if config.TRIGGER_ON_NON_WHITELISTED_URLS and text else []
+        trigger_entries = [
+            _format_match(entry) for entry in re.finditer(self.blacklist_re, text)
+        ] if config.TRIGGER_ON_BLACKLISTED and text else []
 
-        trigger_urls = [*filter(self.url_blacklist_re.match, self.__extractor.find_urls(text, only_unique=True))]
-        trigger_entries = [entry.group(0) for entry in re.finditer(self.blacklist_re, text)]
-
-        logging.debug(f'Evaluated: {text}\n{trigger_urls}\n{trigger_entries}')
-
+        logging.debug(f'Evaluated: {text}\n{trigger_urls or []}\n{trigger_entries}')
         return trigger_urls, trigger_entries

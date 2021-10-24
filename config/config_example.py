@@ -17,9 +17,15 @@ FETCH_REPORTS_INTERVAL: int = 60 * 2  # interval between reports fetch (in secon
 LIVE_POSTS_RECONNECT_DELAY: int = 25  # delay between live posts socket reconnection (in seconds)
 
 """Live posts evaluator related"""
+# text matches related
+TRIGGER_ON_BLACKLISTED: bool = True  # text that are blacklisted entries should trigger a notification?
+TRIGGER_OFFSET: int = 25  # number of characters showed before/after the trigger
+TRIGGER_WRAPPER: str = "*"  # string used to wrap the *trigger*
 BLACKLIST: tuple = (  # each entry must be a regex
     r"\bd+u+m+m+y*\b",
 )
+# urls matches related
+TRIGGER_ON_NON_WHITELISTED_URLS: bool = False  # urls that are not whitelisted should trigger a notification?
 URL_WHITELIST: tuple = (  # each entry must be a regex
     r"(\w*:/+)*(\w*\.)*(dummy.com)(/+\w*)*",
 
