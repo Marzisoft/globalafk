@@ -50,10 +50,11 @@ class LivePostsWatcher(Watcher):
 
                 self.io.wait()  # blocks the thread until something happens
             except Exception as e:
-                logging.error(f'Exception occurred {e}while watching live')
+                logging.error(f'Exception occurred {e} while watching live')
                 self.notify(f'Lost live posts connection', f'Retrying in {config.LIVE_POSTS_RETRY_TIMEOUT} seconds')
 
-            if not self.kill.wait(config.LIVE_POSTS_RETRY_TIMEOUT):
+            if self.kill.wait(config.LIVE_POSTS_RETRY_TIMEOUT):
+                logging.info("Exiting live posts watcher")
                 break
 
 
@@ -88,5 +89,6 @@ class ReportsWatcher(Watcher):
                 logging.error(f'Exception {e} occurred while fetching reports')
                 self.notify(f'Error while fetching reports', f'Trying to reconnect')
 
-            if not self.kill.wait(config.FETCH_REPORTS_INTERVAL):
+            if self.kill.wait(config.FETCH_REPORTS_INTERVAL):
+                logging.info("Exiting reports watcher")
                 break
