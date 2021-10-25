@@ -7,9 +7,9 @@ from config import config
 
 
 def _format_match(match):
-    s, e, m = match.start(0), match.end(0), match.string
-    r = m[s - config.TRIGGER_OFFSET or 0:e if e + config.TRIGGER_OFFSET > len(m) else e + config.TRIGGER_OFFSET]
-    return r[:s] + config.TRIGGER_WRAPPER + r[s:e] + config.TRIGGER_WRAPPER + r[e:]
+    s, e = match.start(0), match.end(0)
+    m = match.string[:s] + config.TRIGGER_WRAPPER + match.string[s:e] + config.TRIGGER_WRAPPER + match.string[e:]
+    return m[s - config.TRIGGER_OFFSET or 0:e if e + config.TRIGGER_OFFSET > len(m) else e + config.TRIGGER_OFFSET]
 
 
 class Evaluator:
