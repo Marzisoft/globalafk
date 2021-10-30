@@ -29,7 +29,7 @@ class ModSession(Session):
         try:
             self.post(
                 url=f'https://{config.DOMAIN_NAME}/forms/login',
-                data={'username': config.MOD_USERNAME, 'password': config.MOD_PASSWORD},
+                data={'username': config.ACCOUNT_USERNAME, 'password': config.ACCOUNT_PASSWORD},
                 headers={'Referer': f'https://{config.DOMAIN_NAME}/login.html'},
                 timeout=config.REQUEST_TIMEOUT
             )

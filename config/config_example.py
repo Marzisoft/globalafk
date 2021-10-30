@@ -1,6 +1,9 @@
 DOMAIN_NAME: str = "dummy.ib"
-MOD_USERNAME: str = "dummy_username"
-MOD_PASSWORD: str = "dummy_password"
+ACCOUNT_USERNAME: str = "dummy_username"
+ACCOUNT_PASSWORD: str = "dummy_password"
+TARGET_BOARDS: tuple = (  # None if global or boards that you moderate
+    'dummy',  # /dummy/ board entry
+)
 
 """Notification related"""
 USE_TERMUX_API: bool = False
