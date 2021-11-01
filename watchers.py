@@ -5,8 +5,6 @@ from threading import Thread, Event
 import socketio
 from requests import RequestException
 
-from config import config
-
 
 def get_path(post): return f'>>>/{post["board"]}/{post["thread"] or post["postId"]} ({post["postId"]})'
 
@@ -23,13 +21,15 @@ class Watcher(ABC, Thread):
 
 
 class RecentWatcher(Watcher):
-    def __init__(self, session, notify, evaluate, board=None):
+    def __init__(self, session, notify, evaluate, board=None, reconnection_delay=15):
         super().__init__()
+
+        self.session = session
 
         client = socketio.Client(  # cannot use class variable to make the annotations
             http_session=session,
-            reconnection_delay=config.LIVE_POSTS_RECONNECTION_DELAY,
-            reconnection_delay_max=config.LIVE_POSTS_RECONNECTION_DELAY
+            reconnection_delay=reconnection_delay,
+            reconnection_delay_max=reconnection_delay
         )
 
         @client.event
@@ -41,7 +41,7 @@ class RecentWatcher(Watcher):
         @client.event
         def disconnect():
             logging.error(f'Live posts client disconnected')
-            notify(f'Lost live posts connection', f'Retrying in {config.LIVE_POSTS_RECONNECTION_DELAY} seconds')
+            notify(f'Lost live posts connection', f'Retrying in {reconnection_delay} seconds')
 
         @client.on('newPost')
         def on_new_post(post):
@@ -53,7 +53,7 @@ class RecentWatcher(Watcher):
         self.start()
 
     def run(self):
-        self.client.connect(f'wss://{config.DOMAIN_NAME}/')
+        self.client.connect(f'wss://{self.session.domain_name}/')
         self.client.wait()  # blocks the thread until something happens
 
         if self._stp.wait():
@@ -62,11 +62,13 @@ class RecentWatcher(Watcher):
 
 
 class ReportsWatcher(Watcher):
-    def __init__(self, session, notify, board=None):
+    def __init__(self, session, notify, board=None, fetch_interval=60 * 2):
         super().__init__()
         self.session = session
         self.notify = notify
-        self._endpoint = f'https://{config.DOMAIN_NAME}/{f"{board}/manage" if board else "globalmanage"}/reports.json'
+
+        self._endpoint = f'{session.imageboard_url}/{f"{board}/manage" if board else "globalmanage"}/reports.json'
+        self.fetch_interval = fetch_interval
 
         self.known_reports = 0
 
@@ -93,6 +95,6 @@ class ReportsWatcher(Watcher):
                 logging.error(f'Exception {e} occurred while fetching reports')
                 self.notify(f'Error while fetching reports', f'Trying to reconnect')
 
-            if self._stp.wait(config.FETCH_REPORTS_INTERVAL):
+            if self._stp.wait(self.fetch_interval):
                 logging.info("Exiting reports watcher")
                 break

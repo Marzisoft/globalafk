@@ -5,40 +5,30 @@ from requests import Session
 from requests.adapters import HTTPAdapter
 from requests.packages.urllib3.util.retry import Retry
 
-from config import config
-
 
 class ModSession(Session):
-    def __init__(self):
+    def __init__(self, imageboard, username, password, retries=3, timeout=10, backoff_factor=0.3):
         super().__init__()
-        self.mount(f'https://{config.DOMAIN_NAME}/',  # overwriting the default adapters to force the config values
-                   HTTPAdapter(max_retries=Retry(total=config.REQUEST_RETRIES, backoff_factor=config.REQUEST_RETRIES)))
-        self.timeout = config.REQUEST_TIMEOUT
-        self.hooks = {
-            'response': [lambda response, *args, **kwargs: response.raise_for_status()]}  # always raise for status
+        self.domain_name = imageboard
+        self.imageboard_url = f"https://{imageboard}"
+        self.auth_params = {'username': username, 'password': password}
 
-        self._auth()  # tries to authenticate the session
+        # overwrites session default behaviour
+        self.mount(self.imageboard_url, HTTPAdapter(max_retries=Retry(total=retries, backoff_factor=backoff_factor)))
+        self.hooks = {'response': [lambda response, *args, **kwargs: response.raise_for_status()]}
+        self._timeout = timeout
+
+        self.authenticate()  # tries to authenticate the session
 
     def request(self, method, url, **kwargs):  # overwrites request function to add timeout
         if 'timeout' not in kwargs:
-            kwargs['timeout'] = self.timeout
+            kwargs['timeout'] = self._timeout
         return super().request(method, url, **kwargs)
 
-    def _auth(self):
-        # TODO probably this should be wrapped in cycle that awaits until the problem fixes itself
+    def authenticate(self):
         try:
-            self.post(
-                url=f'https://{config.DOMAIN_NAME}/forms/login',
-                data={'username': config.ACCOUNT_USERNAME, 'password': config.ACCOUNT_PASSWORD},
-                headers={'Referer': f'https://{config.DOMAIN_NAME}/login.html'},
-                timeout=config.REQUEST_TIMEOUT
-            )
+            self.post(url=f'{self.imageboard_url}/forms/login', data=self.auth_params,
+                      headers={'Referer': f'{self.imageboard_url}/login.html'})
         except requests.RequestException as e:  # ambiguous catch but atm nothing can be done in more specific cases
-            logging.error(f'Exception {e} occurred while authenticating mod connection')
-            self.close()
-            raise Exception('Unable to authenticate')
-
-        logging.info('Established mod authenticated session')
-
-    def auth_cookie(self):
-        return f'connect.sid={self.cookies.get("connect.sid", domain=config.DOMAIN_NAME)}'
+            logging.error(f'Exception {e} occurred while authenticating moderator')
+            raise Exception('Unable to authenticate moderator')

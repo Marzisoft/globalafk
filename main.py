@@ -2,7 +2,7 @@ import logging
 import subprocess
 
 from config import config
-from evaluator import Evaluator
+from evaluator import PostEvaluator
 from session import ModSession
 from watchers import ReportsWatcher, RecentWatcher
 
@@ -15,20 +15,48 @@ def send_notification(title, body):
 
 def main():
     logging.basicConfig(level=logging.DEBUG, format='[%(asctime)s %(funcName)s] %(message)s (%(name)s)')
-    session = ModSession()  # custom session that is authenticated and hopefully can be shared between watchers
+
+    session = ModSession(  # custom session that is authenticated and hopefully can be shared between watchers
+        imageboard=config.IMAGEBOARD,
+        username=config.ACCOUNT_USERNAME,
+        password=config.ACCOUNT_PASSWORD,
+        retries=config.REQUEST_RETRIES,
+        timeout=config.REQUEST_TIMEOUT,
+        backoff_factor=config.RETRIES_BACKOFF_FACTOR
+    )
 
     watchers = list()
-    if config.TARGET_BOARDS:
-        for board in config.TARGET_BOARDS:
+    if config.BOARDS:
+        for board in config.BOARDS:
             if config.WATCH_REPORTS:  # launches reports watcher
-                watchers.append(ReportsWatcher(session, send_notification, board=board))
-            if config.WATCH_LIVE_POSTS:  # launches live posts watcher
-                watchers.append(RecentWatcher(session, send_notification, Evaluator().evaluate, board=board))
+                watchers.append(ReportsWatcher(
+                    session=session,
+                    notify=send_notification,
+                    board=board,
+                    fetch_interval=config.FETCH_REPORTS_INTERVAL
+                ))
+            if config.WATCH_RECENT:  # launches live posts watcher
+                watchers.append(RecentWatcher(
+                    session=session,
+                    notify=send_notification,
+                    board=board,
+                    evaluate=PostEvaluator(blacklist=config.BLACKLIST, url_whitelist=config.URL_WHITELIST).evaluate
+                ))
+
     else:
         if config.WATCH_REPORTS:  # launches reports watcher
-            watchers.append(ReportsWatcher(session, send_notification))
-        if config.WATCH_LIVE_POSTS:  # launches live posts watcher
-            watchers.append(RecentWatcher(session, send_notification, Evaluator().evaluate))
+            watchers.append(ReportsWatcher(
+                session=session,
+                notify=send_notification,
+                fetch_interval=config.FETCH_REPORTS_INTERVAL
+            ))
+
+        if config.WATCH_RECENT:  # launches live posts watcher
+            watchers.append(RecentWatcher(
+                session=session,
+                notify=send_notification,
+                evaluate=PostEvaluator(blacklist=config.BLACKLIST, url_whitelist=config.URL_WHITELIST).evaluate
+            ))
 
     for watcher in watchers:
         watcher.join()
