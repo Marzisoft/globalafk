@@ -10,10 +10,11 @@ def get_path(post): return f'>>>/{post["board"]}/{post["thread"] or post["postId
 
 
 class Watcher(ABC, Thread):
-    def __init__(self):
+    def __init__(self, session):
         Thread.__init__(self)
         self.daemon = True
         self._stp = Event()  # _stop is reserved
+        self.session = session
 
     def stop(self):
         logging.debug(f'Killing thread, goodbye')
@@ -22,9 +23,7 @@ class Watcher(ABC, Thread):
 
 class RecentWatcher(Watcher):
     def __init__(self, session, notify, evaluate, board=None, reconnection_delay=15):
-        super().__init__()
-
-        self.session = session
+        super().__init__(session)
 
         client = socketio.Client(  # cannot use class variable to make the annotations
             http_session=session,
@@ -53,7 +52,7 @@ class RecentWatcher(Watcher):
         self.start()
 
     def run(self):
-        self.client.connect(f'wss://{self.session.domain_name}/')
+        self.client.connect(f'wss://{self.session.imageboard}/')
         self.client.wait()  # blocks the thread until something happens
 
         if self._stp.wait():
@@ -63,8 +62,7 @@ class RecentWatcher(Watcher):
 
 class ReportsWatcher(Watcher):
     def __init__(self, session, notify, board=None, fetch_interval=60 * 2):
-        super().__init__()
-        self.session = session
+        super().__init__(session)
         self.notify = notify
 
         self._endpoint = f'{session.imageboard_url}/{f"{board}/manage" if board else "globalmanage"}/reports.json'

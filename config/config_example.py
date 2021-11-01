@@ -5,7 +5,7 @@ BOARDS: tuple = (  # None if global or boards that you moderate
     'dummy',  # /dummy/ board entry
 )
 
-"""Notification related"""
+"""Notifications"""
 USE_TERMUX_API: bool = False
 
 """Reports watcher """

@@ -9,7 +9,7 @@ from requests.packages.urllib3.util.retry import Retry
 class ModSession(Session):
     def __init__(self, imageboard, username, password, retries=3, timeout=10, backoff_factor=0.3):
         super().__init__()
-        self.domain_name = imageboard
+        self.imageboard = imageboard
         self.imageboard_url = f"https://{imageboard}"
         self.auth_params = {'username': username, 'password': password}
 
