@@ -64,10 +64,9 @@ class ReportsWatcher(Watcher):
     def __init__(self, session, notify, board=None, fetch_interval=60 * 2):
         super().__init__(session)
         self.notify = notify
-
-        self._endpoint = f'{session.imageboard_url}/{f"{board}/manage" if board else "globalmanage"}/reports.json'
         self.fetch_interval = fetch_interval
 
+        self._endpoint = f'{session.imageboard_url}/{f"{board}/manage" if board else "globalmanage"}/reports.json'
         self.known_reports = 0
 
         self.start()
@@ -81,13 +80,9 @@ class ReportsWatcher(Watcher):
             try:
                 reported_posts, num_reported_posts = self.fetch_reports()
                 if 0 < num_reported_posts != self.known_reports:
-                    self.notify(f'New reports!',
-                                "\n".join(
-                                    [
-                                        f'{get_path(p)}  {[r["reason"] for r in (p["globalreports"] if "globalreports" in p else p["reports"])]}'
-                                        for p
-                                        in
-                                        reported_posts]))
+                    self.notify(f'New reports!', "\n".join([
+                        f'{get_path(p)}  {[r["reason"] for r in (p["globalreports"] if "globalreports" in p else p["reports"])]}'
+                        for p in reported_posts]))
                 self.known_reports = num_reported_posts
             except RequestException as e:
                 logging.error(f'Exception {e} occurred while fetching reports')

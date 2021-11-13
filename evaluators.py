@@ -1,9 +1,16 @@
 import logging
 import re
+from abc import ABC, abstractmethod
 
 from urlextract import URLExtract
 
 from config import config
+
+
+class Evaluator(ABC):
+    @abstractmethod
+    def eval(self, text, *args, **kwargs):
+        raise NotImplementedError
 
 
 def _format_match(match):
@@ -12,7 +19,7 @@ def _format_match(match):
     return m[s - config.TRIGGER_OFFSET or 0:e if e + config.TRIGGER_OFFSET > len(m) else e + config.TRIGGER_OFFSET]
 
 
-class PostEvaluator:
+class PostEvaluator(Evaluator):
     def __init__(self, blacklist=(), url_whitelist=()):
         self.blacklist_re = re.compile('|'.join(blacklist), re.IGNORECASE) if blacklist else None
         if url_whitelist:
@@ -22,7 +29,7 @@ class PostEvaluator:
             self.url_blacklist_re = None
         logging.debug(f'Compiled regex\nblacklist:{self.blacklist_re}\nurl blacklist:{self.url_blacklist_re}')
 
-    def evaluate(self, text):
+    def eval(self, text, *args, **kwargs):
         trigger_urls = [
             *filter(self.url_blacklist_re.match, self._url_extractor.find_urls(text, only_unique=True))
         ] if self.url_blacklist_re and text else []

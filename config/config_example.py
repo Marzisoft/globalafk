@@ -1,7 +1,7 @@
 IMAGEBOARD: str = "dummy.ib"
 ACCOUNT_USERNAME: str = "dummy_username"
 ACCOUNT_PASSWORD: str = "dummy_password"
-BOARDS: tuple = (  # None if global or boards that you moderate
+BOARDS: tuple = (  # (None,) if global or boards that you moderate
     'dummy',  # /dummy/ board entry
 )
 
