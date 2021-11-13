@@ -2,13 +2,18 @@ import logging
 
 from config import config
 from session import ModSession
-from watchers import ReportsWatcher, RecentWatcher
-from notifiers import TermuxNotifier, NotifySendNotifier
-from evaluators import PostEvaluator
+from components.watchers import ReportsWatcher, RecentWatcher
+from components.notifier import TermuxNotifier, NotifySendNotifier
+from components.evaluators import PostEvaluator
+
+
+def format_match(match):
+    s, e = match.start(0), match.end(0)
+    m = match.string[:s] + config.TRIGGER_WRAPPER + match.string[s:e] + config.TRIGGER_WRAPPER + match.string[e:]
+    return m[s - config.TRIGGER_OFFSET or 0:e if e + config.TRIGGER_OFFSET > len(m) else e + config.TRIGGER_OFFSET]
 
 
 def main():
-    # filename = "log.log", filemode = 'a'
     logging.basicConfig(level=logging.DEBUG,
                         format='[%(asctime)s %(funcName)s] %(message)s (%(name)s)')
 

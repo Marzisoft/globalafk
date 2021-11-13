@@ -83,7 +83,9 @@ class ReportsWatcher(Watcher):
                     self.notify(f'New reports!', "\n".join([
                         f'{get_path(p)}  {[r["reason"] for r in (p["globalreports"] if "globalreports" in p else p["reports"])]}'
                         for p in reported_posts]))
+
                 self.known_reports = num_reported_posts
+
             except RequestException as e:
                 logging.error(f'Exception {e} occurred while fetching reports')
                 self.notify(f'Error while fetching reports', f'Trying to reconnect')

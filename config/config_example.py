@@ -8,7 +8,7 @@ BOARDS: tuple = (  # (None,) if global or boards that you moderate
 """Notifications"""
 USE_TERMUX_API: bool = False
 
-"""Reports watcher """
+"""Reports watcher"""
 WATCH_REPORTS: bool = True
 FETCH_REPORTS_INTERVAL: int = 60 * 2  # interval between reports fetch (in seconds)
 
