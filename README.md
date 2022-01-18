@@ -13,10 +13,10 @@ All of these features can be turned off independently.
 ## Requirements
 You need to have **moderation privileges** in at least one board and an environment with **python3** and **the dependencies listed in [*requirements.txt*](./requirements.txt) file** in order to run this script. 
 
-To send notifications on Linux you must have **notify-send** installed to receive notifications on linux. 
+To send notifications on Linux you must have **notify-send** installed. 
 Run `notify-send test` to test it.
 
-To send notifications on Android (assuming you are using [*Termux*](https://termux.com/)) you must have **Termux:API** installed to receive notifications on android. 
+To send notifications on Android (assuming you are using [*Termux*](https://termux.com/)) you must have **Termux:API** installed. 
 Run `termux-notification --title test` to test it.
 
 ## Getting Started
@@ -26,3 +26,6 @@ Run `termux-notification --title test` to test it.
 4) Make a copy of [*config_example.py*](./config/config_example.py) and rename it to *config.py*
 5) Fill the account details and configure the script behavior in your new *config.py* file
 6) Run `python3 main.py`
+
+## Contribute
+All contributions are welcomed. Feel free to open a issue or make a pull request. 

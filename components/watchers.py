@@ -52,7 +52,7 @@ class RecentWatcher(Watcher):
         self.start()
 
     def run(self):
-        self.client.connect(f'wss://{self.session.imageboard}/')
+        self.client.connect(f'wss://{self.session.imageboard}/', transports=['websocket'])
         self.client.wait()  # blocks the thread until something happens
 
         if self._stp.wait():
