@@ -10,7 +10,7 @@ class Notifier(ABC):
 
 class TermuxNotifier(Notifier):
     def notify(self, title, content, *args, **kwargs):
-        subprocess.call(['termux-notification', '--title', title, '--content', content])
+        subprocess.call(['termux-notification', '--title', title, '--content', content or 'No Message'])
 
 
 class NotifySendNotifier(Notifier):
