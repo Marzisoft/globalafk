@@ -5,9 +5,7 @@ from threading import Thread, Event
 import socketio
 from requests import RequestException
 
-
 def get_path(post): return f'>>>/{post["board"]}/{post["thread"] or post["postId"]} ({post["postId"]})'
-
 
 class Watcher(ABC, Thread):
     def __init__(self, session):
@@ -44,9 +42,8 @@ class RecentWatcher(Watcher):
 
         @client.on('newPost')
         def on_new_post(post):
-            urls, entries = evaluate(post["nomarkup"])
-            if urls or entries:
-                notify(f'Alert! {get_path(post)}', '\n'.join(urls) + '\n'.join(entries))
+            board_name = post["board"]
+            notify(f'Alert! {get_path(post)}\n', post['nomarkup'], f'{session.imageboard_url}/{board_name}/manage/thread/{post["thread"] or post["postId"]}.html#{post["postId"]}')
 
         self.client = client
         self.start()
