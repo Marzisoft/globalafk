@@ -33,17 +33,16 @@ class RecentWatcher(Watcher):
         def connect():
             logging.debug(f'Live posts client connected')
             client.emit('room', f'{board}-manage-recent-hashed' if board else 'globalmanage-recent-hashed')
-            #notify(f'Connected', f'Watching live posts')
 
         @client.event
         def disconnect():
             logging.error(f'Live posts client disconnected')
-            #notify(f'Lost live posts connection', f'Retrying in {reconnection_delay} seconds')
 
         @client.on('newPost')
         def on_new_post(post):
-            board_name = post["board"]
-            notify(f'Alert! {get_path(post)}\n', post['nomarkup'], f'{session.imageboard_url}/{board_name}/manage/thread/{post["thread"] or post["postId"]}.html#{post["postId"]}')
+            board_name=post["board"]
+            post_url=f'{session.imageboard_url}/{board_name}/manage/thread/{post["thread"] or post["postId"]}.html#{post["postId"]}'
+            notify(f'Alert! {get_path(post)}\n', post['nomarkup'], url=post_url)
 
         self.client = client
         self.start()
@@ -85,7 +84,6 @@ class ReportsWatcher(Watcher):
 
             except RequestException as e:
                 logging.error(f'Exception {e} occurred while fetching reports')
-                #self.notify(f'Error while fetching reports', f'Trying to reconnect')
 
             if self._stp.wait(self.fetch_interval):
                 logging.info("Exiting reports watcher")
