@@ -12,6 +12,7 @@ class ModSession(Session):
         self.imageboard = imageboard
         self.imageboard_url = f"https://{imageboard}"
         self.auth_params = {'username': username, 'password': password}
+        self.csrf_token = None
 
         # overwrites session default behaviour
         self.mount(self.imageboard_url, HTTPAdapter(max_retries=Retry(total=retries, backoff_factor=backoff_factor)))
@@ -32,3 +33,24 @@ class ModSession(Session):
         except requests.RequestException as e:  # ambiguous catch but atm nothing can be done in more specific cases
             logging.error(f'Exception {e} occurred while authenticating moderator')
             raise Exception('Unable to authenticate moderator')
+
+    def update_csrf(self):
+        try:
+            res = self.get(url=f'{self.imageboard_url}/csrf.json',
+                headers={'Referer': f'{self.imageboard_url}/csrf.json'}).json()
+            if 'token' in res:
+                self.csrf_token = res['token']
+            else:
+                raise Exception('Unable to update csrf token')
+        except requests.RequestException as e:
+            logging.error(f'Exception {e} occurred while updating csrf token')
+            raise Exception('Unable to update csrf token')
+
+    def post_actions(self, **kwargs):
+        try:
+            raise Exception('not implemented')
+#            res = self.post(url=f'{self.imageboard_url}/forms/board/{kwargs["board"]}/modactions',
+#                headers={'Referer': f'{self.imageboard_url}/forms/board/{kwargs["board"]}/modactions'}).json()
+        except requests.RequestException as e:
+            logging.error(f'Exception {e} occurred while authenticating moderator')
+            raise Exception('Failed to submit post actions')
