@@ -23,7 +23,17 @@ def main(argv):
     session.update_csrf()
 
     res = session.post_actions(board=optdict['-b'], postid=optdict['-p'], actions=optdict['-a'])
+
+    toast_message = None
     if 'message' in res:
+        toast_message = res['message']
+    elif 'messages' in res:
+        toast_message = "\n".join(res['messages'])
+    elif 'error' in res:
+        toast_message = res['error']
+    elif 'errors' in res:
+        toast_message = "\n".join(res['errors'])
+    if toast_message:
         subprocess.call(['termux-toast', res['message']])
 
 if __name__ == '__main__':
