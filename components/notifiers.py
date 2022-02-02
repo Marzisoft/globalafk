@@ -17,7 +17,7 @@ class TermuxNotifier(Notifier):
                 '--button1', 'Delete',
                 '--button1-action', f'python3 {getcwd()}/notification_button.py -b {kwargs["board"]} -p {kwargs["postId"]} -a delete',
                 '--button2', 'Delete+Ban',
-                '--button2-action', f'python3 {getcwd()}/notificaiton_button.py -b {kwargs["board"]} -p {kwargs["postId"]} -a delete,ban',
+                '--button2-action', f'python3 {getcwd()}/notification_button.py -b {kwargs["board"]} -p {kwargs["postId"]} -a delete,ban',
                 '--button3', 'Delete+Global Ban',
                 '--button3-action', f'python3 {getcwd()}/notification_button.py -b {kwargs["board"]} -p {kwargs["postId"]} -a delete,global_ban']
         subprocess.call(args)
