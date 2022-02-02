@@ -34,7 +34,7 @@ def main(argv):
     elif 'errors' in res:
         toast_message = "\n".join(res['errors'])
     if toast_message:
-        subprocess.call(['termux-toast', res['message']])
+        subprocess.call(['termux-toast', toast_message])
 
 if __name__ == '__main__':
     main(sys.argv[1:])
