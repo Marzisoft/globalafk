@@ -36,20 +36,12 @@ class ModSession(Session):
 
     def update_csrf(self):
         try:
-
-#            res = self.get(url=f'{self.imageboard_url}/csrf.json',
-#                headers={'Referer': f'{self.imageboard_url}/csrf.json'}).json()
-#            if 'token' in res:
-#                self.csrf_token = res['token']
-#            else:
-#                raise Exception('Unable to update csrf token')
-
-            #temporary hack to get csrf token to test on <=0.1.10
-            res2 = self.get(url=f'{self.imageboard_url}/account.html',
-                headers={'Referer': f'{self.imageboard_url}/account.html'})
-            csrfi = res2.text.index('_csrf')
-            self.csrf_token = res2.text[csrfi+14:csrfi+50]
-
+            res = self.get(url=f'{self.imageboard_url}/csrf.json',
+                headers={'Referer': f'{self.imageboard_url}/csrf.json'}).json()
+            if 'token' in res:
+                self.csrf_token = res['token']
+            else:
+                raise Exception('Unable to update csrf token')
         except requests.RequestException as e:
             logging.error(f'Exception {e} occurred while updating csrf token')
             raise Exception('Unable to update csrf token')
