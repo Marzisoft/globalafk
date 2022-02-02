@@ -1,4 +1,5 @@
 import logging
+import subprocess
 
 import sys, getopt
 from config import config
@@ -21,8 +22,9 @@ def main(argv):
 
     session.update_csrf()
 
-    #todo: for board, postid and action args, send the request
-    session.post_actions(board=optdict['-b'], postid=optdict['-p'], actions=optdict['-a'])
+    res = session.post_actions(board=optdict['-b'], postid=optdict['-p'], actions=optdict['-a'])
+    if 'message' in res:
+        subprocess.call(['termux-toast', res['message']])
 
 if __name__ == '__main__':
     main(sys.argv[1:])

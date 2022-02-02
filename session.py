@@ -36,21 +36,34 @@ class ModSession(Session):
 
     def update_csrf(self):
         try:
-            res = self.get(url=f'{self.imageboard_url}/csrf.json',
-                headers={'Referer': f'{self.imageboard_url}/csrf.json'}).json()
-            if 'token' in res:
-                self.csrf_token = res['token']
-            else:
-                raise Exception('Unable to update csrf token')
+
+#            res = self.get(url=f'{self.imageboard_url}/csrf.json',
+#                headers={'Referer': f'{self.imageboard_url}/csrf.json'}).json()
+#            if 'token' in res:
+#                self.csrf_token = res['token']
+#            else:
+#                raise Exception('Unable to update csrf token')
+
+            #temporary hack to get csrf token to test on <=0.1.10
+            res2 = self.get(url=f'{self.imageboard_url}/account.html',
+                headers={'Referer': f'{self.imageboard_url}/account.html'})
+            csrfi = res2.text.index('_csrf')
+            self.csrf_token = res2.text[csrfi+14:csrfi+50]
+
         except requests.RequestException as e:
             logging.error(f'Exception {e} occurred while updating csrf token')
             raise Exception('Unable to update csrf token')
 
     def post_actions(self, **kwargs):
         try:
-            raise Exception('not implemented')
-#            res = self.post(url=f'{self.imageboard_url}/forms/board/{kwargs["board"]}/modactions',
-#                headers={'Referer': f'{self.imageboard_url}/forms/board/{kwargs["board"]}/modactions'}).json()
+            actions = kwargs['actions'].split(',')
+            body = {'checkedposts':kwargs["postid"],'_csrf':self.csrf_token,'log_message':'globalafk'}
+            for action in actions:
+                body[action] = '1'
+            res = self.post(url=f'{self.imageboard_url}/forms/board/{kwargs["board"]}/modactions',
+                headers={'Referer': f'{self.imageboard_url}/forms/board/{kwargs["board"]}/modactions','x-using-xhr': 'true'},
+                data=body).json()
+            return res
         except requests.RequestException as e:
-            logging.error(f'Exception {e} occurred while authenticating moderator')
+            logging.error(f'Exception {e} occurred while posting action')
             raise Exception('Failed to submit post actions')
