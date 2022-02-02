@@ -40,9 +40,8 @@ class RecentWatcher(Watcher):
 
         @client.on('newPost')
         def on_new_post(post):
-            board_name=post["board"]
-            post_url=f'{session.imageboard_url}/{board_name}/manage/thread/{post["thread"] or post["postId"]}.html#{post["postId"]}'
-            notify(f'Alert! {get_path(post)}\n', post['nomarkup'], url=post_url)
+            post_url=f'{session.imageboard_url}/{post["board"]}/manage/thread/{post["thread"] or post["postId"]}.html#{post["postId"]}'
+            notify(f'Alert! {get_path(post)}\n', post['nomarkup'], url=post_url, board=post["board"], postId=post["postId"])
 
         self.client = client
         self.start()
