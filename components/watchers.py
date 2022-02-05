@@ -5,7 +5,9 @@ from threading import Thread, Event
 import socketio
 from requests import RequestException
 
-def get_path(post): return f'>>>/{post["board"]}/{post["thread"] or post["postId"]} ({post["postId"]})'
+def get_quote(post): return f'>>>/{post["board"]}/{post["thread"] or post["postId"]} ({post["postId"]})'
+
+def get_manage_path(post): return f'/{post["board"]}/manage/thread/{post["thread"] or post["postId"]}.html#{post["postId"]}'
 
 class Watcher(ABC, Thread):
     def __init__(self, session):
@@ -40,8 +42,15 @@ class RecentWatcher(Watcher):
 
         @client.on('newPost')
         def on_new_post(post):
-            post_url=f'{session.imageboard_url}/{post["board"]}/manage/thread/{post["thread"] or post["postId"]}.html#{post["postId"]}'
-            notify(f'Alert! {get_path(post)}\n', post['nomarkup'], url=post_url, board=post["board"], postId=post["postId"])
+            urls, entries = evaluate(post["nomarkup"])
+            if urls or entries:
+                post_url=f'{session.imageboard_url}{get_manage_path(post)}'
+                buttons=[{"text":"Delete","actions":"delete"},
+                    {"text":"Delete+Ban" if board else "Delete+Global Ban","actions":"delete,ban" if board else "delete,global_ban"}]
+					#todo: add this last button even if a board recents, because global staff can still global ban. but need a way to
+					#check if the account is global staff, which we dont have a json endpoint for in jschan yet.
+                    #{"text":"Delete+Global Ban","actions":"dismiss" if board else "global_dismiss"}]
+                notify(f'Alert! {get_quote(post)}\n', post['nomarkup'], link=post_url, post=post, buttons=buttons)
 
         self.client = client
         self.start()
@@ -61,6 +70,7 @@ class ReportsWatcher(Watcher):
         self.notify = notify
         self.fetch_interval = fetch_interval
 
+        self.board = board
         self._endpoint = f'{session.imageboard_url}/{f"{board}/manage" if board else "globalmanage"}/reports.json'
         self.known_reports = 0
 
@@ -75,9 +85,14 @@ class ReportsWatcher(Watcher):
             try:
                 reported_posts, num_reported_posts = self.fetch_reports()
                 if 0 < num_reported_posts != self.known_reports:
-                    self.notify(f'New reports!', "\n".join([
-                        f'{get_path(p)}  {[r["reason"] for r in (p["globalreports"] if "globalreports" in p else p["reports"])]}'
-                        for p in reported_posts]))
+                    for p in reported_posts:
+                        post_url=f'{self.session.imageboard_url}{get_manage_path(p)}'
+                        #todo: allow to customise these buttons somewhere
+                        buttons=[{"text":"Delete","actions":"delete"},
+                            {"text":"Delete+Ban" if self.board else "Delete+Global Ban","actions":"delete,ban" if self.board else "delete,global_ban"},
+                            {"text":"Dismiss","actions":"dismiss" if self.board else "global_dismiss"}]
+                        self.notify(f'New reports!', "\n".join([f'{get_quote(p)}  {[r["reason"] for r in (p["globalreports"] if "globalreports" in p else p["reports"])]}']),
+                            link=post_url, post=p, buttons=buttons)
 
                 self.known_reports = num_reported_posts
 
