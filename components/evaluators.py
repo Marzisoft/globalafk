@@ -25,8 +25,6 @@ class PostEvaluator(Evaluator):
         trigger_urls = [
             *filter(self.url_blacklist_re.match, self._url_extractor.find_urls(text, only_unique=True))
         ] if self.url_blacklist_re and text else []
-        trigger_entries = [
-            _format_match(entry) for entry in re.finditer(self.blacklist_re, text)
-        ] if self.blacklist_re and text else []
+        trigger_entries = re.findall(self.blacklist_re, text) if self.blacklist_re and text else []
         logging.debug(f'Evaluated text:{text}\ntrigger urls:{trigger_urls}\ntrigger entries:{trigger_entries}')
         return trigger_urls, trigger_entries
