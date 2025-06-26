@@ -9,6 +9,8 @@ def get_quote(post): return f'>>>/{post["board"]}/{post["thread"] or post["postI
 
 def get_manage_path(post): return f'/{post["board"]}/manage/thread/{post["thread"] or post["postId"]}.html#{post["postId"]}'
 
+def get_report_path(post): return f'{self.session.imageboard_url}/globalmanage/reports.html' if "globalreports" in post else f'{self.session.imageboard_url}/{post["board"]/manage/reports.html}'
+
 class Watcher(ABC, Thread):
     def __init__(self, session):
         Thread.__init__(self)
@@ -50,7 +52,7 @@ class RecentWatcher(Watcher):
 					#todo: add this last button even if a board recents, because global staff can still global ban. but need a way to
 					#check if the account is global staff, which we dont have a json endpoint for in jschan yet.
                     #{"text":"Delete+Global Ban","actions":"dismiss" if board else "global_dismiss"}]
-                notify(f'Alert! {get_quote(post)}\n', post['nomarkup'], link=post_url, post=post, buttons=buttons)
+                notify(f'New Post: {get_quote(post)}\n', post['nomarkup'], link=post_url, post=post, buttons=buttons)
 
         self.client = client
         self.start()
@@ -86,12 +88,12 @@ class ReportsWatcher(Watcher):
                 reported_posts, num_reported_posts = self.fetch_reports()
                 if 0 < num_reported_posts != self.known_reports:
                     for p in reported_posts:
-                        post_url=f'{self.session.imageboard_url}{get_manage_path(p)}'
+                        post_url=f'{self.session.imageboard_url}{get_report_path(p)}'
                         #todo: allow to customise these buttons somewhere
                         buttons=[{"text":"Delete","actions":"delete"},
                             {"text":"Delete+Ban" if self.board else "Delete+Global Ban","actions":"delete,ban" if self.board else "delete,global_ban"},
                             {"text":"Dismiss","actions":"dismiss" if self.board else "global_dismiss"}]
-                        self.notify(f'New reports!', "\n".join([f'{get_quote(p)}  {[r["reason"] for r in (p["globalreports"] if "globalreports" in p else p["reports"])]}']),
+                        self.notify(f'Reports for {get_quote(p)}', "\n".join([f'{get_quote(p)}  {[r["reason"] for r in (p["globalreports"] if "globalreports" in p else p["reports"])]}']),
                             link=post_url, post=p, buttons=buttons)
 
                 self.known_reports = num_reported_posts
