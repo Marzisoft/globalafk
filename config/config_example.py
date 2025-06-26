@@ -33,3 +33,18 @@ URL_WHITELIST: tuple = (  # or None to turn off url blacklist (each entry must b
 REQUEST_RETRIES: int = 6  # number of allowed retries
 RETRIES_BACKOFF_FACTOR: float = 3  # sleep factor between retries, defines how the backoff grows
 REQUEST_TIMEOUT: int = 15  # max wait time for a server response (in seconds)
+
+"""Atom Feeds"""
+FEED_AUTHOR_NAME: str = "Dummy"
+FEED_LOGO: str = "https://dummy.ib/file/web-app-manifest-192x192.png"
+FEED_LANGUAGE: str = "en"
+
+REPORTS_FEED_TITLE: str = "Dummy Reports"
+REPORTS_FEED_SUBTITLE: str "The most current active reports on Dummy."
+REPORTS_FEED_URL: str = "https://dummy.ib/reports.atom"
+REPORTS_FEED_PATH: str = "/opt/jschan/static/feed/reports.atom"
+
+RECENT_FEED_TITLE: str = "Dummy Posts"
+RECENT_FEED_SUBTITLE: str "The most recent posts on Dummy."
+RECENT_FEED_URL: str = "https://dummy.ib/posts.atom"
+RECENT_FEED_PATH: str = "/opt/jschan/static/feed/posts.atom"

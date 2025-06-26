@@ -21,15 +21,39 @@ def main():
                          password=config.ACCOUNT_PASSWORD, retries=config.REQUEST_RETRIES,
                          timeout=config.REQUEST_TIMEOUT, backoff_factor=config.RETRIES_BACKOFF_FACTOR)
 
-    notifier = TermuxNotifier() if config.USE_TERMUX_API else NotifySendNotifier()
+    # notifier = TermuxNotifier() if config.USE_TERMUX_API else NotifySendNotifier()
+
+    imageboardUrl = f"https://{config.IMAGEBOARD}"
+
+    reportsNotifier = AtomFeedBuilder(
+            config.REPORTS_FEED_URL,
+            config.REPORTS_FEED_TITLE,
+            config.FEED_AUTHOR_NAME,
+            config.REPORTS_FEED_URL,
+            imageboardUrl,
+            config.FEED_LOGO,
+            config.REPORTS_FEED_SUBTITLE,
+            config.FEED_LANGUAGE,
+            config.REPORTS_FEED_PATH)
+
+    recentNotifier = AtomFeedBuilder(
+            config.RECENT_FEED_URL,
+            config.RECENT_FEED_TITLE,
+            config.FEED_AUTHOR_NAME,
+            config.RECENT_FEED_URL,
+            imageboardUrl,
+            config.FEED_LOGO,
+            config.RECENT_FEED_SUBTITLE,
+            config.FEED_LANGUAGE,
+            config.RECENT_FEED_PATH)
 
     watchers = list()
     for board in config.BOARDS:
         if config.WATCH_REPORTS:  # launches reports watcher
-            watchers.append(ReportsWatcher(session=session, notify=notifier.notify, board=board,
+            watchers.append(ReportsWatcher(session=session, notify=reportsNotifier.notify, board=board,
                                            fetch_interval=config.FETCH_REPORTS_INTERVAL))
         if config.WATCH_RECENT:  # launches recent watcher
-            watchers.append(RecentWatcher(session=session, notify=notifier.notify, board=board,
+            watchers.append(RecentWatcher(session=session, notify=recentNotifier.notify, board=board,
                                           evaluate=PostEvaluator(blacklist=config.BLACKLIST,
                                                                  url_whitelist=config.URL_WHITELIST).eval))
     for watcher in watchers:

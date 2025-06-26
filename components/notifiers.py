@@ -1,6 +1,7 @@
 import subprocess
 from os import getcwd
 from abc import ABC, abstractmethod
+from feedgen.feed import FeedGenerator
 
 class Notifier(ABC):
     @abstractmethod
@@ -28,3 +29,49 @@ class TermuxNotifier(Notifier):
 class NotifySendNotifier(Notifier):
     def notify(self, title, content, *args, **kwargs):
         subprocess.call(['notify-send', title, content])
+
+class AtomFeedBuilder(Notifier):
+    def __init__(self, feedId, title, authorName, feedLink, siteLink, logo, subtitle, language, path):
+        fg = FeedGenerator()
+
+        fg.id(feedId)
+        fg.title(title)
+        fg.author({'name':authorName})
+        fg.link(href=feedLink, rel='self')
+        fg.logo(logo)
+        fg.subtitle(subtitle)
+        fg.language(language)
+
+        self.feedPath = path
+
+        # populate the feed with an initial dummy entry, since empty feeds are invalid
+        fe = fg.add_entry()
+        fe.id(f"{feedLink}/placeholder")
+        fe.title("Placeholder Entry")
+        fe.content("This feed is empty right now.")
+        fe.link(href=siteLink)
+        self.placeholderEntry = fe
+
+        fg.atom_file(path)
+
+    def notify(self, title, content, *args, **kwargs):
+        link = kwargs["link"];
+        entryId = kwargs["post"]["_id"];
+
+        fe = fg.add_entry()
+        fe.id(entryId)
+        fe.title(title)
+        fe.content(content)
+        fe.link(href=link)
+
+        # add/remove placeholder entry
+        if (len(fe.entry()) == 0):
+            fe.add_entry(self.placeholderEntry)
+        elif (len(fe.entry()) > 1):
+            fe.remove_entry(self.placeholderEntry)
+
+        # only include a certain number of entries in the feed
+        while (len(fe.entry()) > 10):
+            fe.remove_entry(10)
+
+        fg.atom_file(self.feedPath)
