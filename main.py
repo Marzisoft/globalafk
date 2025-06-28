@@ -3,7 +3,7 @@ import logging
 from config import config
 from session import ModSession
 from components.watchers import ReportsWatcher, RecentWatcher
-from components.notifiers import TermuxNotifier, NotifySendNotifier
+from components.notifiers import TermuxNotifier, NotifySendNotifier, AtomFeedBuilder
 from components.evaluators import PostEvaluator
 
 

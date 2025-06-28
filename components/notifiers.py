@@ -2,6 +2,7 @@ import subprocess
 from os import getcwd
 from abc import ABC, abstractmethod
 from feedgen.feed import FeedGenerator
+from pathlib import Path
 
 class Notifier(ABC):
     @abstractmethod
@@ -42,6 +43,7 @@ class AtomFeedBuilder(Notifier):
         fg.subtitle(subtitle)
         fg.language(language)
 
+        self.feedGenerator = fg
         self.feedPath = path
 
         # populate the feed with an initial dummy entry, since empty feeds are invalid
@@ -52,11 +54,16 @@ class AtomFeedBuilder(Notifier):
         fe.link(href=siteLink)
         self.placeholderEntry = fe
 
+        # make our dir if it doesn't exist already
+        p = Path(path)
+        p.parent.mkdir(parents=True, exist_ok=True)
+
         fg.atom_file(path)
 
     def notify(self, title, content, *args, **kwargs):
         link = kwargs["link"];
         entryId = kwargs["post"]["_id"];
+        fg = self.feedGenerator
 
         fe = fg.add_entry()
         fe.id(entryId)
@@ -65,13 +72,13 @@ class AtomFeedBuilder(Notifier):
         fe.link(href=link)
 
         # add/remove placeholder entry
-        if (len(fe.entry()) == 0):
-            fe.add_entry(self.placeholderEntry)
-        elif (len(fe.entry()) > 1):
-            fe.remove_entry(self.placeholderEntry)
+        if (len(fg.entry()) == 0):
+            fg.add_entry(self.placeholderEntry)
+        elif (len(fg.entry()) > 1 and fg.entry(self.placeholderEntry)):
+            fg.remove_entry(self.placeholderEntry)
 
         # only include a certain number of entries in the feed
-        while (len(fe.entry()) > 10):
-            fe.remove_entry(10)
+        while (len(fg.entry()) > 10):
+            fg.remove_entry(10)
 
         fg.atom_file(self.feedPath)

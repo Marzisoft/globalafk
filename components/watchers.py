@@ -9,7 +9,7 @@ def get_quote(post): return f'>>>/{post["board"]}/{post["thread"] or post["postI
 
 def get_manage_path(post): return f'/{post["board"]}/manage/thread/{post["thread"] or post["postId"]}.html#{post["postId"]}'
 
-def get_report_path(post): return f'{self.session.imageboard_url}/globalmanage/reports.html' if "globalreports" in post else f'{self.session.imageboard_url}/{post["board"]/manage/reports.html}'
+def get_report_path(post): return f'/globalmanage/reports.html' if "globalreports" in post else f'/{post["board"]/manage/reports.html}'
 
 class Watcher(ABC, Thread):
     def __init__(self, session):
