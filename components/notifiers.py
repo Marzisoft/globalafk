@@ -39,7 +39,7 @@ class AtomFeedBuilder(Notifier):
         fg.title(title)
         fg.author({'name':authorName})
         fg.link(href=feedLink, rel='self')
-        fg.logo(logo)
+        fg.icon(logo)
         fg.subtitle(subtitle)
         fg.language(language)
 
