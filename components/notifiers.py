@@ -74,7 +74,7 @@ class AtomFeedBuilder(Notifier):
         # add/remove placeholder entry
         if (len(fg.entry()) == 0):
             fg.add_entry(self.placeholderEntry)
-        elif (len(fg.entry()) > 1 and fg.entry(self.placeholderEntry)):
+        elif (len(fg.entry()) > 1 and self.placeholderEntry in fg.entry()):
             fg.remove_entry(self.placeholderEntry)
 
         # only include a certain number of entries in the feed
