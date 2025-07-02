@@ -62,7 +62,8 @@ class AtomFeedBuilder(Notifier):
 
     def notify(self, title, content, *args, **kwargs):
         link = kwargs["link"];
-        entryId = kwargs["post"]["_id"];
+        # use uuid param if provided, else fall back to post id
+        entryId = kwargs.get('uuid', kwargs["post"]["_id"]);
         fg = self.feedGenerator
 
         fe = fg.add_entry()

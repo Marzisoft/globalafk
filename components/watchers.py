@@ -5,11 +5,13 @@ from threading import Thread, Event
 import socketio
 from requests import RequestException
 
+import base64
+
 def get_quote(post): return f'>>>/{post["board"]}/{post["thread"] or post["postId"]} ({post["postId"]})'
 
 def get_manage_path(post): return f'/{post["board"]}/manage/thread/{post["thread"] or post["postId"]}.html#{post["postId"]}'
 
-def get_report_path(post): return f'/globalmanage/reports.html' if "globalreports" in post else f'/{post["board"]/manage/reports.html}'
+def get_report_path(post, isGlobal): return f'/globalmanage/reports.html' if isGlobal else f'/{post["board"]}/manage/reports.html'
 
 class Watcher(ABC, Thread):
     def __init__(self, session):
@@ -74,7 +76,7 @@ class ReportsWatcher(Watcher):
 
         self.board = board
         self._endpoint = f'{session.imageboard_url}/{f"{board}/manage" if board else "globalmanage"}/reports.json'
-        self.known_reports = 0
+        self.known_reports = set()
 
         self.start()
 
@@ -88,15 +90,24 @@ class ReportsWatcher(Watcher):
                 reported_posts, num_reported_posts = self.fetch_reports()
                 if 0 < num_reported_posts != self.known_reports:
                     for p in reported_posts:
-                        post_url=f'{self.session.imageboard_url}{get_report_path(p)}'
+
                         #todo: allow to customise these buttons somewhere
                         buttons=[{"text":"Delete","actions":"delete"},
                             {"text":"Delete+Ban" if self.board else "Delete+Global Ban","actions":"delete,ban" if self.board else "delete,global_ban"},
                             {"text":"Dismiss","actions":"dismiss" if self.board else "global_dismiss"}]
-                        self.notify(f'Reports for {get_quote(p)}', "\n".join([f'{get_quote(p)}  {[r["reason"] for r in (p["globalreports"] if "globalreports" in p else p["reports"])]}']),
-                            link=post_url, post=p, buttons=buttons)
 
-                self.known_reports = num_reported_posts
+                        if 'globalreports' in p:
+                            for r in p['globalreports']:
+                                post_url=f'{self.session.imageboard_url}{get_report_path(p, True)}'
+                                if r['id'] not in self.known_reports:
+                                    self.known_reports.add(r['id'])
+                                    self.notify(f'Report for {get_quote(p)}', r['reason'], link=post_url, post=p, uuid=r['id'], buttons=buttons)
+                        if 'reports' in p:
+                            for r in p['reports']:
+                                post_url=f'{self.session.imageboard_url}{get_report_path(p, False)}'
+                                if r['id'] not in self.known_reports:
+                                    self.known_reports.add(r['id'])
+                                    self.notify(f'Report for {get_quote(p)}', r['reason'], link=post_url, post=p, uuid=r['id'], buttons=buttons)
 
             except RequestException as e:
                 logging.error(f'Exception {e} occurred while fetching reports')
