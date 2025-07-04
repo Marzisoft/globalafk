@@ -1,9 +1,6 @@
 IMAGEBOARD: str = "dummy.ib"
 ACCOUNT_USERNAME: str = "dummy_username"
 ACCOUNT_PASSWORD: str = "dummy_password"
-BOARDS: tuple = (  # (None,) if global or boards that you moderate
-    'dummy',  # /dummy/ board entry
-)
 
 """Notifications"""
 USE_TERMUX_API: bool = False
@@ -11,10 +8,16 @@ USE_TERMUX_API: bool = False
 """Reports watcher"""
 WATCH_REPORTS: bool = True
 FETCH_REPORTS_INTERVAL: int = 60 * 2  # interval between reports fetch (in seconds)
+REPORTS_BOARDS: tuple = (  # (None,) if global or boards that you moderate
+    'dummy',  # /dummy/ board entry
+)
 
 """Recent watcher"""
 WATCH_RECENT: bool = True
 RECENT_RECONNECTION_DELAY: int = 25  # delay between live posts socket reconnection (in seconds)
+RECENT_BOARDS: tuple = (  # (None,) if global or boards that you moderate
+    'dummy',  # /dummy/ board entry
+)
 
 # posts text match
 BLACKLIST: tuple = (  # or None to turn off blacklist (each entry must be a regex)

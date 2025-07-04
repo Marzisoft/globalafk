@@ -48,10 +48,11 @@ def main():
             config.RECENT_FEED_PATH)
 
     watchers = list()
-    for board in config.BOARDS:
+    for board in config.REPORTS_BOARDS:
         if config.WATCH_REPORTS:  # launches reports watcher
             watchers.append(ReportsWatcher(session=session, notify=reportsNotifier.notify, board=board,
                                            fetch_interval=config.FETCH_REPORTS_INTERVAL))
+    for board in config.RECENT_BOARDS:
         if config.WATCH_RECENT:  # launches recent watcher
             watchers.append(RecentWatcher(session=session, notify=recentNotifier.notify, board=board,
                                           evaluate=PostEvaluator(blacklist=config.BLACKLIST,
