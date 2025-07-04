@@ -55,8 +55,7 @@ def main():
     for board in config.RECENT_BOARDS:
         if config.WATCH_RECENT:  # launches recent watcher
             watchers.append(RecentWatcher(session=session, notify=recentNotifier.notify, board=board,
-                                          evaluate=PostEvaluator(blacklist=config.BLACKLIST,
-                                                                 url_whitelist=config.URL_WHITELIST).eval))
+                                          evaluate=lambda p: (True, True)))
     for watcher in watchers:
         watcher.join()
 
