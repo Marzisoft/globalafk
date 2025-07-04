@@ -7,9 +7,11 @@ from requests import RequestException
 
 import base64
 
-def get_quote(post): return f'>>>/{post["board"]}/{post["thread"] or post["postId"]} ({post["postId"]})'
+def get_quote(post): return f'/{post["board"]}/{post["postId"]}'
 
 def get_manage_path(post): return f'/{post["board"]}/manage/thread/{post["thread"] or post["postId"]}.html#{post["postId"]}'
+
+def get_post_path(post): return f'/{post["board"]}/thread/{post["thread"] or post["postId"]}.html#{post["postId"]}'
 
 def get_report_path(post, isGlobal): return f'/globalmanage/reports.html' if isGlobal else f'/{post["board"]}/manage/reports.html'
 
@@ -48,7 +50,7 @@ class RecentWatcher(Watcher):
         def on_new_post(post):
             urls, entries = evaluate(post["nomarkup"])
             if urls or entries:
-                post_url=f'{session.imageboard_url}{get_manage_path(post)}'
+                post_url=f'{session.imageboard_url}{get_post_path(post)}'
                 buttons=[{"text":"Delete","actions":"delete"},
                     {"text":"Delete+Ban" if board else "Delete+Global Ban","actions":"delete,ban" if board else "delete,global_ban"}]
 					#todo: add this last button even if a board recents, because global staff can still global ban. but need a way to
@@ -101,7 +103,7 @@ class ReportsWatcher(Watcher):
                                 post_url=f'{self.session.imageboard_url}{get_report_path(p, True)}'
                                 if r['id'] not in self.known_reports:
                                     self.known_reports.add(r['id'])
-                                    self.notify(f'Report for {get_quote(p)}', r['reason'], link=post_url, post=p, uuid=r['id'], buttons=buttons)
+                                    self.notify(f'New Report: {get_quote(p)}', f"Reason: {r['reason']}", link=post_url, post=p, uuid=r['id'], buttons=buttons)
                         if 'reports' in p:
                             for r in p['reports']:
                                 post_url=f'{self.session.imageboard_url}{get_report_path(p, False)}'
