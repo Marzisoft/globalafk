@@ -51,3 +51,7 @@ RECENT_FEED_TITLE: str = "Dummy Posts"
 RECENT_FEED_SUBTITLE: str = "The most recent posts on Dummy."
 RECENT_FEED_URL: str = "https://dummy.ib/posts.atom"
 RECENT_FEED_PATH: str = "/opt/jschan/static/feed/posts.atom"
+
+"""Discord Webhooks"""
+RECENT_WEBHOOK: str = "dummy"
+REPORTS_WEBHOOK: str = "dummy"

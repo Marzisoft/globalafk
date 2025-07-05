@@ -1,6 +1,7 @@
 import subprocess
 from os import getcwd
 from abc import ABC, abstractmethod
+from discord_webhook import DiscordWebhook
 from feedgen.feed import FeedGenerator
 from pathlib import Path
 
@@ -83,3 +84,14 @@ class AtomFeedBuilder(Notifier):
             fg.remove_entry(10)
 
         fg.atom_file(self.feedPath)
+
+class DiscordNotifier(Notifier):
+    def __init__(self, webhookUrl):
+        self.url = webhookUrl
+
+    def notify(self, title, content, *args, **kwargs):
+        link = kwargs["link"];
+
+        webhook = DiscordWebhook(url=self.url)
+        webhook.content = f"[{title}]({link})\n>>> {content}"
+        webhook.execute()

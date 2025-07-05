@@ -3,7 +3,7 @@ import logging
 from config import config
 from session import ModSession
 from components.watchers import ReportsWatcher, RecentWatcher
-from components.notifiers import TermuxNotifier, NotifySendNotifier, AtomFeedBuilder
+from components.notifiers import TermuxNotifier, NotifySendNotifier, AtomFeedBuilder, DiscordNotifier
 from components.evaluators import PostEvaluator
 
 
@@ -12,6 +12,11 @@ def format_match(match):
     m = match.string[:s] + config.TRIGGER_WRAPPER + match.string[s:e] + config.TRIGGER_WRAPPER + match.string[e:]
     return m[s - config.TRIGGER_OFFSET or 0:e if e + config.TRIGGER_OFFSET > len(m) else e + config.TRIGGER_OFFSET]
 
+def multi_notify(notifiers):
+    def notify(title, content, *args, **kwargs):
+        for notifier in notifiers:
+            notifier.notify(title, content, *args, **kwargs)
+    return notify
 
 def main():
     logging.basicConfig(level=logging.DEBUG,
@@ -25,7 +30,7 @@ def main():
 
     imageboardUrl = f"https://{config.IMAGEBOARD}"
 
-    reportsNotifier = AtomFeedBuilder(
+    reportsAtomNotifier = AtomFeedBuilder(
             config.REPORTS_FEED_URL,
             config.REPORTS_FEED_TITLE,
             config.FEED_AUTHOR_NAME,
@@ -36,7 +41,7 @@ def main():
             config.FEED_LANGUAGE,
             config.REPORTS_FEED_PATH)
 
-    recentNotifier = AtomFeedBuilder(
+    recentAtomNotifier = AtomFeedBuilder(
             config.RECENT_FEED_URL,
             config.RECENT_FEED_TITLE,
             config.FEED_AUTHOR_NAME,
@@ -47,14 +52,24 @@ def main():
             config.FEED_LANGUAGE,
             config.RECENT_FEED_PATH)
 
+    recentDiscordNotifier = DiscordNotifier(config.RECENT_WEBHOOK)
+    reportsDiscordNotifier = DiscordNotifier(config.REPORTS_WEBHOOK)
+
+    recentNotify = multi_notify([
+        recentAtomNotifier,
+        recentDiscordNotifier])
+    reportsNotify = multi_notify([
+        reportsAtomNotifier,
+        reportsDiscordNotifier])
+
     watchers = list()
     for board in config.REPORTS_BOARDS:
         if config.WATCH_REPORTS:  # launches reports watcher
-            watchers.append(ReportsWatcher(session=session, notify=reportsNotifier.notify, board=board,
+            watchers.append(ReportsWatcher(session=session, notify=reportsNotify, board=board,
                                            fetch_interval=config.FETCH_REPORTS_INTERVAL))
     for board in config.RECENT_BOARDS:
         if config.WATCH_RECENT:  # launches recent watcher
-            watchers.append(RecentWatcher(session=session, notify=recentNotifier.notify, board=board,
+            watchers.append(RecentWatcher(session=session, notify=recentNotify, board=board,
                                           evaluate=lambda p: (True, True)))
     for watcher in watchers:
         watcher.join()

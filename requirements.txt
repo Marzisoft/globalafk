@@ -2,12 +2,13 @@ appdirs==1.4.4
 bidict==0.21.3
 certifi==2021.10.8
 charset-normalizer==2.0.7
+discord-webhook==1.4.1
 feedgen==1.0.0
 filelock==3.3.1
 idna==3.3
 python-engineio==4.2.1
 python-socketio==5.4.1
-requests==2.26.0
+requests==2.32.4
 uritools==3.0.2
 urlextract==1.4.0
 urllib3==1.26.7
