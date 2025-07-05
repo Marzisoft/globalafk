@@ -56,7 +56,7 @@ class RecentWatcher(Watcher):
 					#todo: add this last button even if a board recents, because global staff can still global ban. but need a way to
 					#check if the account is global staff, which we dont have a json endpoint for in jschan yet.
                     #{"text":"Delete+Global Ban","actions":"dismiss" if board else "global_dismiss"}]
-                notify(f'New Post: {get_quote(post)}\n', post['nomarkup'], link=post_url, post=post, buttons=buttons)
+                notify(f'New Post: {get_quote(post)}', post['nomarkup'], link=post_url, post=post, buttons=buttons)
 
         self.client = client
         self.start()
