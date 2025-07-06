@@ -100,6 +100,6 @@ class DiscordNotifier(Notifier):
     def notify(self, title, content, *args, **kwargs):
         link = kwargs["link"];
 
-        webhook = AsyncDiscordWebhook(url=self.url)
+        webhook = AsyncDiscordWebhook(url=self.url, rate_limit_retry=True)
         webhook.content = f"[{title}]({link})\n>>> {content}"
         asyncio.run_coroutine_threadsafe(webhook.execute(), self.event_loop)
