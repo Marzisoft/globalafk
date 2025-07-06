@@ -90,6 +90,7 @@ class ReportsWatcher(Watcher):
         while True:  # main loop, do while bootleg
             try:
                 reported_posts, num_reported_posts = self.fetch_reports()
+                current_reports = set()
                 if 0 < num_reported_posts != self.known_reports:
                     for p in reported_posts:
 
@@ -100,16 +101,20 @@ class ReportsWatcher(Watcher):
 
                         if 'globalreports' in p:
                             for r in p['globalreports']:
+                                current_reports.add(r['id'])
+
                                 post_url=f'{self.session.imageboard_url}{get_report_path(p, True)}'
                                 if r['id'] not in self.known_reports:
-                                    self.known_reports.add(r['id'])
                                     self.notify(f'New Report: {get_quote(p)}', f"Reason: {r['reason']}", link=post_url, post=p, uuid=r['id'], buttons=buttons)
                         if 'reports' in p:
                             for r in p['reports']:
+                                current_reports.add(r['id'])
+
                                 post_url=f'{self.session.imageboard_url}{get_report_path(p, False)}'
                                 if r['id'] not in self.known_reports:
-                                    self.known_reports.add(r['id'])
                                     self.notify(f'Report for {get_quote(p)}', r['reason'], link=post_url, post=p, uuid=r['id'], buttons=buttons)
+
+                self.known_reports = current_reports
 
             except RequestException as e:
                 logging.error(f'Exception {e} occurred while fetching reports')
