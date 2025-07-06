@@ -24,7 +24,8 @@ def main():
 
     session = ModSession(imageboard=config.IMAGEBOARD, username=config.ACCOUNT_USERNAME,
                          password=config.ACCOUNT_PASSWORD, retries=config.REQUEST_RETRIES,
-                         timeout=config.REQUEST_TIMEOUT, backoff_factor=config.RETRIES_BACKOFF_FACTOR)
+                         timeout=config.REQUEST_TIMEOUT, backoff_factor=config.RETRIES_BACKOFF_FACTOR,
+                         http_username=config.HTTP_USERNAME, http_password=config.HTTP_PASSWORD)
 
     # notifier = TermuxNotifier() if config.USE_TERMUX_API else NotifySendNotifier()
 

@@ -3,14 +3,19 @@ import logging
 import requests
 from requests import Session
 from requests.adapters import HTTPAdapter
+from requests.auth import HTTPBasicAuth
 from requests.packages.urllib3.util.retry import Retry
 
 
 class ModSession(Session):
-    def __init__(self, imageboard, username, password, retries=3, timeout=10, backoff_factor=0.3):
+    def __init__(self, imageboard, username, password, retries=3, timeout=10, backoff_factor=0.3, http_username=None, http_password=None):
         super().__init__()
         self.imageboard = imageboard
         self.imageboard_url = f"https://{imageboard}"
+        self.http_username = http_username
+        self.http_password = http_password
+        if http_username is not None and http_password is not None:
+            self.auth = HTTPBasicAuth(http_username, http_password)
         self.auth_params = {'username': username, 'password': password}
         self.csrf_token = None
 

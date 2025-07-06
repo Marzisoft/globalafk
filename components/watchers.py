@@ -62,7 +62,10 @@ class RecentWatcher(Watcher):
         self.start()
 
     def run(self):
-        self.client.connect(f'wss://{self.session.imageboard}/', transports=['websocket'])
+        headers = dict()
+        if self.session.http_username is not None and self.session.http_password is not None:
+            headers['Authorization'] = ('Basic ' + base64.b64encode(f"{self.session.http_username}:{self.session.http_password}".encode()).decode())
+        self.client.connect(f'wss://{self.session.imageboard}/', transports=['websocket'], headers=headers)
         self.client.wait()  # blocks the thread until something happens
 
         if self._stp.wait():

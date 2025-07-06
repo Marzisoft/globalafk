@@ -1,6 +1,8 @@
 IMAGEBOARD: str = "dummy.ib"
 ACCOUNT_USERNAME: str = "dummy_username"
 ACCOUNT_PASSWORD: str = "dummy_password"
+HTTP_USERNAME: str = None
+HTTP_PASSWORD: str = None
 
 """Notifications"""
 USE_TERMUX_API: bool = False
