@@ -105,14 +105,14 @@ class ReportsWatcher(Watcher):
 
                                 post_url=f'{self.session.imageboard_url}{get_report_path(p, True)}'
                                 if r['id'] not in self.known_reports:
-                                    self.notify(f'New Report: {get_quote(p)}', f"Reason: {r['reason']}", link=post_url, post=p, uuid=r['id'], buttons=buttons)
+                                    self.notify(f'Global Report: {get_quote(p)}', f"Reason: {r['reason']}", link=post_url, post=p, uuid=r['id'], buttons=buttons)
                         if 'reports' in p:
                             for r in p['reports']:
                                 current_reports.add(r['id'])
 
                                 post_url=f'{self.session.imageboard_url}{get_report_path(p, False)}'
                                 if r['id'] not in self.known_reports:
-                                    self.notify(f'Report for {get_quote(p)}', r['reason'], link=post_url, post=p, uuid=r['id'], buttons=buttons)
+                                    self.notify(f'Report: {get_quote(p)}', r['reason'], link=post_url, post=p, uuid=r['id'], buttons=buttons)
 
                 self.known_reports = current_reports
 
