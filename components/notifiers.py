@@ -1,9 +1,11 @@
+import asyncio
 import subprocess
 from os import getcwd
 from abc import ABC, abstractmethod
-from discord_webhook import DiscordWebhook
+from discord_webhook import AsyncDiscordWebhook
 from feedgen.feed import FeedGenerator
 from pathlib import Path
+from threading import Thread, Lock
 
 class Notifier(ABC):
     @abstractmethod
@@ -61,37 +63,43 @@ class AtomFeedBuilder(Notifier):
 
         fg.atom_file(path)
 
+        self.mutex = Lock()
+
     def notify(self, title, content, *args, **kwargs):
         link = kwargs["link"];
         # use uuid param if provided, else fall back to post id
         entryId = kwargs.get('uuid', kwargs["post"]["_id"]);
-        fg = self.feedGenerator
 
-        fe = fg.add_entry()
-        fe.id(entryId)
-        fe.title(title)
-        fe.content(content)
-        fe.link(href=link)
+        with self.mutex:
+            fg = self.feedGenerator
 
-        # add/remove placeholder entry
-        if (len(fg.entry()) == 0):
-            fg.add_entry(self.placeholderEntry)
-        elif (len(fg.entry()) > 1 and self.placeholderEntry in fg.entry()):
-            fg.remove_entry(self.placeholderEntry)
+            fe = fg.add_entry()
+            fe.id(entryId)
+            fe.title(title)
+            fe.content(content)
+            fe.link(href=link)
 
-        # only include a certain number of entries in the feed
-        while (len(fg.entry()) > 10):
-            fg.remove_entry(10)
+            # add/remove placeholder entry
+            if (len(fg.entry()) == 0):
+                fg.add_entry(self.placeholderEntry)
+            elif (len(fg.entry()) > 1 and self.placeholderEntry in fg.entry()):
+                fg.remove_entry(self.placeholderEntry)
 
-        fg.atom_file(self.feedPath)
+            # only include a certain number of entries in the feed
+            while (len(fg.entry()) > 10):
+                fg.remove_entry(10)
+
+            fg.atom_file(self.feedPath)
 
 class DiscordNotifier(Notifier):
     def __init__(self, webhookUrl):
         self.url = webhookUrl
+        self.event_loop = asyncio.new_event_loop()
+        Thread(target=self.event_loop.run_forever).start()
 
     def notify(self, title, content, *args, **kwargs):
         link = kwargs["link"];
 
-        webhook = DiscordWebhook(url=self.url)
+        webhook = AsyncDiscordWebhook(url=self.url)
         webhook.content = f"[{title}]({link})\n>>> {content}"
-        webhook.execute()
+        asyncio.run_coroutine_threadsafe(webhook.execute(), self.event_loop)
