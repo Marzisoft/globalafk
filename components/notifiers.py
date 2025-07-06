@@ -101,5 +101,5 @@ class DiscordNotifier(Notifier):
         link = kwargs["link"];
 
         webhook = AsyncDiscordWebhook(url=self.url, rate_limit_retry=True)
-        webhook.content = f"[{title}]({link})\n>>> {content}"
+        webhook.content = f"[{title}](<{link}>)\n>>> {content}"
         asyncio.run_coroutine_threadsafe(webhook.execute(), self.event_loop)
