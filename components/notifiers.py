@@ -76,7 +76,11 @@ class AtomFeedBuilder(Notifier):
             fe = fg.add_entry()
             fe.id(entryId)
             fe.title(title)
-            fe.content(content)
+            meta = kwargs.get('metadata', None);
+            meta = f"{meta}\n" if meta is not None else ''
+            ellipses = '(...)' if content is not None and len(content) > 32 else ''
+            content = f"{content[:32]}{ellipses}" if content is not None else '(No body)'
+            fe.content(f"{meta}{content}")
             fe.link(href=link)
 
             # add/remove placeholder entry
@@ -101,5 +105,9 @@ class DiscordNotifier(Notifier):
         link = kwargs["link"];
 
         webhook = AsyncDiscordWebhook(url=self.url, rate_limit_retry=True)
-        webhook.content = f"[{title}](<{link}>)\n>>> {content}"
+        meta = kwargs.get('metadata', None);
+        meta = f"{meta}\n" if meta is not None else ''
+        ellipses = '(...)' if content is not None and len(content) > 32 else ''
+        content = f">>> {content[:32]}{ellipses}" if content is not None else '(No body)'
+        webhook.content = f"[{title}](<{link}>)\n{meta}{content}"
         asyncio.run_coroutine_threadsafe(webhook.execute(), self.event_loop)
