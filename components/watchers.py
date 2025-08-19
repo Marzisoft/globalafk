@@ -76,7 +76,7 @@ class RecentWatcher(Watcher):
 
 
 class ReportsWatcher(Watcher):
-    def __init__(self, session, notify, board=None, fetch_interval=60 * 2):
+    def __init__(self, session, notify, board=None, fetch_interval=60 * 1):
         super().__init__(session)
         self.notify = notify
         self.fetch_interval = fetch_interval
